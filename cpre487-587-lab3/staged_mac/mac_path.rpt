@@ -1,0 +1,85 @@
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+--------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2020.1 (lin64) Build 2902540 Wed May 27 19:54:35 MDT 2020
+| Date         : Tue Nov 10 17:20:29 2026
+| Host         : linuxvdi-f26-10.ece.iastate.edu running 64-bit unknown
+| Command      : report_timing -from [all_inputs] -to [get_cells acc_reg*] -max_paths 1 -file ../mac_path.rpt
+| Design       : staged_mac
+| Device       : 7z020-clg484
+| Speed File   : -1  PRODUCTION 1.12 2019-11-22
+--------------------------------------------------------------------------------------------------------------
+
+Timing Report
+
+Slack:                    inf
+  Source:                 SD_AXIS_TDATA[13]
+                            (input port)
+  Destination:            acc_reg[31]/D
+                            (rising edge-triggered cell FDRE clocked by main  {rise@0.000ns fall@0.050ns period=5.000ns})
+  Path Group:             (none)
+  Path Type:              Setup (Max at Slow Process Corner)
+  Data Path Delay:        12.090ns  (logic 4.889ns (40.441%)  route 7.201ns (59.559%))
+  Logic Levels:           15  (CARRY4=9 IBUF=1 LUT2=2 LUT3=1 LUT4=1 LUT6=1)
+  Clock Path Skew:        4.593ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.593ns
+    Source Clock Delay      (SCD):    0.000ns
+    Clock Pessimism Removal (CPR):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+    P21                                               0.000     0.000 f  SD_AXIS_TDATA[13] (IN)
+                         net (fo=0)                   0.000     0.000    SD_AXIS_TDATA[13]
+    P21                  IBUF (Prop_ibuf_I_O)         0.950     0.950 f  SD_AXIS_TDATA_IBUF[13]_inst/O
+                         net (fo=20, routed)          3.309     4.259    SD_AXIS_TDATA_IBUF[13]
+    SLICE_X111Y13        LUT2 (Prop_lut2_I0_O)        0.152     4.411 r  acc[11]_i_33/O
+                         net (fo=1, routed)           0.811     5.223    acc[11]_i_33_n_0
+    SLICE_X109Y13        LUT6 (Prop_lut6_I3_O)        0.332     5.555 r  acc[11]_i_22/O
+                         net (fo=1, routed)           0.000     5.555    acc[11]_i_22_n_0
+    SLICE_X109Y13        CARRY4 (Prop_carry4_S[3]_CO[3])
+                                                      0.401     5.956 r  acc_reg[11]_i_16/CO[3]
+                         net (fo=1, routed)           0.000     5.956    acc_reg[11]_i_16_n_0
+    SLICE_X109Y14        CARRY4 (Prop_carry4_CI_O[1])
+                                                      0.334     6.290 r  acc_reg[15]_i_22/O[1]
+                         net (fo=2, routed)           0.437     6.727    acc_reg[15]_i_22_n_6
+    SLICE_X106Y14        LUT3 (Prop_lut3_I2_O)        0.303     7.030 r  acc[11]_i_8/O
+                         net (fo=2, routed)           1.027     8.057    acc[11]_i_8_n_0
+    SLICE_X107Y14        CARRY4 (Prop_carry4_DI[3]_CO[3])
+                                                      0.385     8.442 r  acc_reg[11]_i_7/CO[3]
+                         net (fo=1, routed)           0.000     8.442    acc_reg[11]_i_7_n_0
+    SLICE_X107Y15        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.114     8.556 r  acc_reg[15]_i_8/CO[3]
+                         net (fo=1, routed)           0.000     8.556    acc_reg[15]_i_8_n_0
+    SLICE_X107Y16        CARRY4 (Prop_carry4_CI_O[0])
+                                                      0.222     8.778 r  acc_reg[15]_i_3/O[0]
+                         net (fo=4, routed)           0.958     9.735    ARG[15]
+    SLICE_X112Y16        LUT2 (Prop_lut2_I0_O)        0.299    10.034 r  acc[19]_i_7/O
+                         net (fo=1, routed)           0.000    10.034    acc[19]_i_7_n_0
+    SLICE_X112Y16        CARRY4 (Prop_carry4_S[0]_CO[3])
+                                                      0.513    10.547 r  acc_reg[19]_i_2/CO[3]
+                         net (fo=1, routed)           0.000    10.547    acc_reg[19]_i_2_n_0
+    SLICE_X112Y17        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    10.664 r  acc_reg[23]_i_2/CO[3]
+                         net (fo=1, routed)           0.000    10.664    acc_reg[23]_i_2_n_0
+    SLICE_X112Y18        CARRY4 (Prop_carry4_CI_CO[3])
+                                                      0.117    10.781 r  acc_reg[27]_i_2/CO[3]
+                         net (fo=1, routed)           0.000    10.781    acc_reg[27]_i_2_n_0
+    SLICE_X112Y19        CARRY4 (Prop_carry4_CI_O[3])
+                                                      0.315    11.096 r  acc_reg[31]_i_4/O[3]
+                         net (fo=1, routed)           0.658    11.755    acc0[31]
+    SLICE_X113Y19        LUT4 (Prop_lut4_I0_O)        0.335    12.090 r  acc[31]_i_3/O
+                         net (fo=1, routed)           0.000    12.090    acc[31]_i_3_n_0
+    SLICE_X113Y19        FDRE                                         r  acc_reg[31]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock main rise edge)       0.000     0.000 r  
+    K19                                               0.000     0.000 r  ACLK (IN)
+                         net (fo=0)                   0.000     0.000    ACLK
+    K19                  IBUF (Prop_ibuf_I_O)         0.804     0.804 r  ACLK_IBUF_inst/O
+                         net (fo=1, routed)           2.006     2.810    ACLK_IBUF
+    BUFGCTRL_X0Y16       BUFG (Prop_bufg_I_O)         0.091     2.901 r  ACLK_IBUF_BUFG_inst/O
+                         net (fo=41, routed)          1.691     4.593    ACLK_IBUF_BUFG
+    SLICE_X113Y19        FDRE                                         r  acc_reg[31]/C
+
+
+
+

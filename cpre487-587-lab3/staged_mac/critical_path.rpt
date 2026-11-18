@@ -1,0 +1,71 @@
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2020.1 (lin64) Build 2902540 Wed May 27 19:54:35 MDT 2020
+| Date         : Tue Nov 10 17:18:49 2026
+| Host         : linuxvdi-f26-10.ece.iastate.edu running 64-bit unknown
+| Command      : report_timing -max_paths 1 -file ../critical_path.rpt
+| Design       : staged_mac
+| Device       : 7z020-clg484
+| Speed File   : -1  PRODUCTION 1.12 2019-11-22
+------------------------------------------------------------------------------------
+
+Timing Report
+
+Slack (MET) :             0.898ns  (required time - arrival time)
+  Source:                 state_reg/C
+                            (rising edge-triggered cell FDRE clocked by main  {rise@0.000ns fall@0.050ns period=5.000ns})
+  Destination:            acc_reg[5]/D
+                            (rising edge-triggered cell FDRE clocked by main  {rise@0.000ns fall@0.050ns period=5.000ns})
+  Path Group:             main
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            5.000ns  (main rise@5.000ns - main rise@0.000ns)
+  Data Path Delay:        3.712ns  (logic 0.672ns (18.101%)  route 3.040ns (81.899%))
+  Logic Levels:           1  (LUT4=1)
+  Clock Path Skew:        -0.070ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    4.599ns = ( 9.599 - 5.000 ) 
+    Source Clock Delay      (SCD):    5.126ns
+    Clock Pessimism Removal (CPR):    0.457ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock main rise edge)       0.000     0.000 r  
+    K19                                               0.000     0.000 r  ACLK (IN)
+                         net (fo=0)                   0.000     0.000    ACLK
+    K19                  IBUF (Prop_ibuf_I_O)         0.938     0.938 r  ACLK_IBUF_inst/O
+                         net (fo=1, routed)           2.205     3.143    ACLK_IBUF
+    BUFGCTRL_X0Y16       BUFG (Prop_bufg_I_O)         0.101     3.244 r  ACLK_IBUF_BUFG_inst/O
+                         net (fo=41, routed)          1.882     5.126    ACLK_IBUF_BUFG
+    SLICE_X112Y43        FDRE                                         r  state_reg/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X112Y43        FDRE (Prop_fdre_C_Q)         0.518     5.644 f  state_reg/Q
+                         net (fo=38, routed)          2.565     8.209    MO_AXIS_TLAST_OBUF
+    SLICE_X111Y13        LUT4 (Prop_lut4_I3_O)        0.154     8.363 r  acc[5]_i_1/O
+                         net (fo=1, routed)           0.475     8.838    acc[5]_i_1_n_0
+    SLICE_X111Y14        FDRE                                         r  acc_reg[5]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock main rise edge)       5.000     5.000 r  
+    K19                                               0.000     5.000 r  ACLK (IN)
+                         net (fo=0)                   0.000     5.000    ACLK
+    K19                  IBUF (Prop_ibuf_I_O)         0.804     5.804 r  ACLK_IBUF_inst/O
+                         net (fo=1, routed)           2.006     7.810    ACLK_IBUF
+    BUFGCTRL_X0Y16       BUFG (Prop_bufg_I_O)         0.091     7.901 r  ACLK_IBUF_BUFG_inst/O
+                         net (fo=41, routed)          1.697     9.599    ACLK_IBUF_BUFG
+    SLICE_X111Y14        FDRE                                         r  acc_reg[5]/C
+                         clock pessimism              0.457    10.056    
+                         clock uncertainty           -0.035    10.020    
+    SLICE_X111Y14        FDRE (Setup_fdre_C_D)       -0.284     9.736    acc_reg[5]
+  -------------------------------------------------------------------
+                         required time                          9.736    
+                         arrival time                          -8.838    
+  -------------------------------------------------------------------
+                         slack                                  0.898    
+
+
+
+
