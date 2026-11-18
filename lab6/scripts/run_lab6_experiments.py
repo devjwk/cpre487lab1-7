@@ -77,8 +77,8 @@ def plot_memory_access_patterns():
     x = list(range(max_steps))
 
     # Weight Accesses
-    axes[0].plot(x, naive_w, label="Naive (R,S,C,M) - Stride +32", color="#d62728", alpha=0.85, linewidth=1.5)
-    axes[0].plot(x, opt_w, label="Cache-Optimized - Sequential (+1)", color="#2ca02c", linewidth=2.2)
+    axes[0].plot(x, naive_w[:max_steps], label="Naive (R,S,C,M) - Stride +32", color="#d62728", alpha=0.85, linewidth=1.5)
+    axes[0].plot(x, opt_w[:max_steps], label="Cache-Optimized - Sequential (+1)", color="#2ca02c", linewidth=2.2)
     axes[0].set_title("Weight / Filter Memory Access Pattern (Conv2)")
     axes[0].set_xlabel("Computation Step (Inner Loop Iteration)")
     axes[0].set_ylabel("Flat Memory Array Index")
@@ -86,8 +86,8 @@ def plot_memory_access_patterns():
     axes[0].grid(True, linestyle="--", alpha=0.4)
 
     # Input Feature Map Accesses
-    axes[1].plot(x, naive_in, label="Naive (Repeated Scan)", color="#d62728", alpha=0.85, linewidth=1.5)
-    axes[1].plot(x, opt_in, label="Cache-Optimized (Register Reuse x32)", color="#1f77b4", linewidth=2.2)
+    axes[1].plot(x, naive_in[:max_steps], label="Naive (Repeated Scan)", color="#d62728", alpha=0.85, linewidth=1.5)
+    axes[1].plot(x, opt_in[:max_steps], label="Cache-Optimized (Register Reuse x32)", color="#1f77b4", linewidth=2.2)
     axes[1].set_title("Input Feature Map Access Pattern (Conv2)")
     axes[1].set_xlabel("Computation Step (Inner Loop Iteration)")
     axes[1].set_ylabel("Flat Memory Array Index")
@@ -95,8 +95,8 @@ def plot_memory_access_patterns():
     axes[1].grid(True, linestyle="--", alpha=0.4)
 
     # Output Feature Map Accesses
-    axes[2].plot(x, naive_out, label="Naive (Single Element Held)", color="#d62728", alpha=0.85, linewidth=1.5)
-    axes[2].plot(x, opt_out, label="Cache-Optimized (Unit-Stride Vector)", color="#ff7f0e", linewidth=2.2)
+    axes[2].plot(x, naive_out[:max_steps], label="Naive (Single Element Held)", color="#d62728", alpha=0.85, linewidth=1.5)
+    axes[2].plot(x, opt_out[:max_steps], label="Cache-Optimized (Unit-Stride Vector)", color="#ff7f0e", linewidth=2.2)
     axes[2].set_title("Output Feature Map Access Pattern (Conv2)")
     axes[2].set_xlabel("Computation Step (Inner Loop Iteration)")
     axes[2].set_ylabel("Flat Memory Array Index")
