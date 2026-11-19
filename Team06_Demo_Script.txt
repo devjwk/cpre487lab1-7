@@ -1,6 +1,7 @@
 ================================================================================
 CPRE 487/587 - Labs 6 & 7 Demo Presentation Script (Team 06 - Jongwoo Kim)
-Target Speaking Time: ~3 min 45 sec - 4 min 00 sec (about 55-60 sec per slide)
+Style: Thought-Process & Engineering Reasoning ("I saw X -> so I thought Y -> so I did Z")
+Target Speaking Time: ~3 min 45 sec - 4 min 00 sec
 ================================================================================
 
 
@@ -9,60 +10,68 @@ Target Speaking Time: ~3 min 45 sec - 4 min 00 sec (about 55-60 sec per slide)
 --------------------------------------------------------------------------------
 
 Hi everyone, I'm Jongwoo from Team 6.
-Throughout Labs 6 and 7, the main theme I found is how much memory access and data movement drive performance.
+When I started Lab 6 on the x86 lab machine, I first looked at why the naive convolution was taking 144.7 milliseconds.
+I noticed that because the weights are stored in output-channel order, having the input channel in the innermost loop forced the CPU to jump by 32 elements in memory on every step.
+So I thought, if I move the output channel (m) to the innermost loop, the CPU can read weights one by one in order and reuse each input value in a register 32 times.
+As you can see in the top-left plot, doing it that way made weight accesses completely sequential and dropped my latency from 144.7 milliseconds down to 27 milliseconds—a 5.4x speedup without changing the math at all.
 
-Starting with Lab 6 on the x86 lab machine: by moving the output channel (m) to the innermost loop, my weight access changed from jumping by 32 in memory every step to reading one by one in order, as shown in the top-left plot.
-Just fixing that cache access pattern dropped my latency from 144.7 milliseconds down to 27 milliseconds—a 5.4x speedup without changing the math at all.
+Next, when I tested cache tiling from block size 2 to 32, I initially expected smaller tiles to fit better in L1 cache.
+However, when I saw Tile 2 jump up to 235.5 milliseconds, I realized that the extra 9-nested-loop overhead and boundary checks were costing more than the cache benefit, whereas Tile 32 matched our 32 output channels and gave the best tiling latency at 27.4 milliseconds.
 
-For tiling, small tiles like size 2 and 4 actually slowed down due to loop overhead, while Tile 32 matched the channel size and performed best at 27.4 milliseconds.
+For multithreading, I thought splitting across output rows using std::thread would be the cleanest approach because each thread writes to separate memory without locks.
+My latency peaked at 4 threads with 8.21 milliseconds—a 17.6x speedup. When I saw 8 to 64 threads slow back down, I realized that since threads are spawned and joined per layer, thread creation overhead and core contention were outweighing the parallel speedup.
 
-Finally, for multithreading, I split work across output rows using std::thread. Unlike some teams on Tuesday that saw speedups at 64 threads, my latency peaked at 4 threads with 8.21 milliseconds—a 17.6x speedup—and then slowed down from 8 to 64 threads as thread spawn and join overhead outweighed the compute gains.
-
-Moving from CPU cache optimization to hardware acceleration brings me to Lab 7.
+Seeing how much memory access mattered on the CPU naturally led into how I approached Lab 7 on the next slide.
 
 
 --------------------------------------------------------------------------------
 [SLIDE 2] Team 06 – Jongwoo Kim – Lab 7
 --------------------------------------------------------------------------------
 
-To pick the right MAC unit for Lab 7, I first looked back at my Lab 5 results. The 8-bit Piped MAC ran at 131 megahertz and delivered 1 MAC per cycle at almost the exact same LUT and flip-flop cost as the Staged MAC.
+Before building the Lab 7 accelerator, I looked back at my Lab 5 MAC results to decide which MAC architecture to use.
+When I compared my Staged and Piped MACs, I saw that the 8-bit Piped MAC ran at 131 megahertz and processed 1 MAC every cycle while using almost the exact same LUTs and flip-flops as the Staged MAC.
+Because of that, I thought using four parallel 8-bit Piped MACs in the Lab 7 template would give the best throughput per resource.
 
-So I used four parallel 8-bit Piped MACs in the Lab 7 template and implemented all four hardware modules: the Index Generator using adder offsets, the four Piped MACs with bias preload, the Dequantization unit, and the Output Storage with 2-by-2 MaxPooling.
+While implementing the four hardware modules, I tried to keep the hardware as lightweight as possible.
+For the Index Generator, instead of using multipliers to calculate 5D addresses, I thought it would be much more efficient to use only adders with precomputed signed jump offsets.
+Then I implemented the four Piped MACs with bias preload, the Dequantization pipeline, and the Output Storage module that does 2-by-2 MaxPooling on the fly using a Read-Modify-Write state machine.
 
-As shown in the top-right waveform, I verified the design stage by stage in the Vivado testbench, and all four modules pass 100% with every fail signal at zero.
-On the bottom right, full-system synthesis completed with 9% LUTs, 4% flip-flops, 2% DSPs, and 49% BRAM.
+To verify the hardware, I thought debugging all four modules at once on the board would be too painful, so I tested them stage by stage in the Vivado testbench first.
+As shown in the top-right waveform, all four stages pass 100% with every fail signal at zero, and full synthesis on the bottom right completed with 9% LUTs, 4% flip-flops, 2% DSPs, and 49% BRAM.
+Right now, I am finishing the C++ CDMA integration using MLP.h to run on the ZedBoard—and after hearing Tuesday's presentations, I'll make sure use_lfn is enabled in Vitis first.
 
-Right now, I am finishing the C++ CDMA integration using MLP.h to benchmark on the ZedBoard—and thanks to Tuesday's tip, I'll make sure use_lfn is enabled in Vitis.
-
-Building and verifying these modules led directly to my main challenges and takeaways on the next slide.
+Working through these modules led directly to my main challenges and takeaways on the next slide.
 
 
 --------------------------------------------------------------------------------
 [SLIDE 3] Team 06 – Challenges & Takeaways
 --------------------------------------------------------------------------------
 
-On the challenge side: just as Lab 6 showed how loop and thread overhead can hurt CPU speed, Lab 7 showed how sensitive hardware is to addressing and memory timing.
+Looking back at my challenges, both Lab 6 and Lab 7 changed how I think about performance bottlenecks.
+In Lab 6, seeing small tiles and high thread counts run slower made me realize that software overhead can easily cancel out theoretical gains.
 
-The two hardest parts in Lab 7 were calculating the 5-loop signed address jumps in index_gen without multipliers, and timing the BRAM Read-Modify-Write cycle for MaxPooling in output_storage.
-In fact, delaying conv_complete by just one clock cycle was critical so the final pooled byte finished writing to BRAM before the accelerator went idle.
+In Lab 7, the two hardest parts were getting the 5-loop signed address jumps right in index_gen, and getting the BRAM Read-Modify-Write timing right for MaxPooling in output_storage.
+Specifically, when I looked at the final write cycle in simulation, I realized that if conv_complete asserts on the same cycle as the last BRAM write enable, the accelerator goes idle one cycle too early. So I thought delaying conv_complete by one clock cycle would let the final pooled byte latch cleanly into BRAM, and that fixed the testbench completely.
 
-Stepping back across Labs 5, 6, and 7, my biggest takeaway is that data movement dominates compute performance—whether it was per-packet FIFO overhead in Lab 5, unit-stride cache locality giving a 5.4x speedup in Lab 6, or double-buffered on-chip BRAM avoiding DDR copies in Lab 7.
+Putting Labs 5, 6, and 7 together, my biggest takeaway is that data movement dominates compute performance.
+In Lab 5, I saw per-packet FIFO transfers bottleneck a fast MAC; in Lab 6, I saw sequential cache access alone give a 5.4x speedup; and in Lab 7, I saw how double-buffered on-chip BRAM avoids slow DDR copies between layers.
 
-And seeing how critical on-chip BRAM is directly shaped my updated term project on the final slide.
+And that realization about on-chip BRAM is what shaped my updated term project on the final slide.
 
 
 --------------------------------------------------------------------------------
 [SLIDE 4] Team 06 – Project Idea
 --------------------------------------------------------------------------------
 
-Originally, my project proposal was to add DMA transfers to the accelerator, because in Lab 5 my bottleneck was the AXI-FIFO transfer.
+Originally, because I saw the AXI-FIFO transfer bottleneck in Lab 5, I proposed adding DMA transfers for my term project.
+However, after reading the instructor feedback that Lab 7 already uses AXI CDMA—and after seeing in my Lab 7 synthesis that on-chip BRAM is at 49% while LUTs and DSPs are under 10%—I thought the real bottleneck we need to solve now is BRAM capacity and DMA data volume.
 
-However, as the instructor feedback pointed out, Lab 7 already includes AXI CDMA—and as I showed on Slide 2, my synthesis results confirm that on-chip BRAM is now the primary bottleneck at 49%, while LUTs and DSPs are under 10%.
+So I decided to pivot my project to Weight and Activation Compression with Sparse Zero-Skipping.
+My thinking is that since ReLU turns all negative activations into zeros, more than half of the activation data we move over DMA and store in BRAM is just zeros.
+If I compress those zero-heavy activations and weights using lossless Run-Length or Bitmask encoding before the DMA transfer, I can cut down both the DMA transfer size and the on-chip BRAM footprint.
 
-So I pivoted my project to Weight and Activation Compression with Sparse Zero-Skipping to attack that BRAM and data-movement bottleneck directly.
-Because ReLU turns all negative activations into zeros, I will compress zero-heavy activations and weights using lossless Run-Length or Bitmask encoding before sending them over DMA.
-
-In hardware, I'll add a lightweight decoder between the BRAM and the MACs, and update the index generator and MAC enable logic to skip zero-value cycles on Conv2—allowing me to save both on-chip BRAM and inference latency without losing accuracy.
+Then, in hardware, I plan to add a lightweight decoder between the BRAM and the MAC units, and modify the index generator and MAC enable logic so the accelerator skips zero-value MAC cycles altogether.
+I'll test this on Conv2 to see how much BRAM and inference latency I can save without losing any accuracy.
 
 Thank you, and I'm happy to take any questions!
 
@@ -72,13 +81,13 @@ Thank you, and I'm happy to take any questions!
 ================================================================================
 
 Q1. How did you split threads in Lab 6, and what SIMD flags did you use?
-A1. "I split threads across the output rows (p dimension) using std::thread so threads never write to the same memory. For SIMD, I used -O3 auto-vectorization over the sequential output-channel (m) innermost loop."
+A1. "I thought splitting across the output rows (p dimension) using std::thread made the most sense so threads never write to the same memory address. For SIMD, I used -O3 auto-vectorization over the sequential output-channel (m) innermost loop."
 
 Q2. How many images did you test for the Lab 6 latency benchmarks?
-A2. "I measured single-image full-CNN inference latency on image_0 across all layers so I could directly compare per-image runtime across all tile sizes and thread counts."
+A2. "I measured single-image full-CNN inference latency on image_0 across all layers so I could directly compare per-image runtime across every tile size and thread count."
 
 Q3. What was your debugging strategy for Lab 7?
-A3. "I debugged incrementally in the Vivado testbench by grouping the waveform into the 4 pipeline stages—Index Gen, MACs, Dequantization, and Output Storage—and fixing each stage's fail signal in order. That's how I caught the 1-cycle delay needed on conv_complete for the final BRAM write."
+A3. "I thought debugging on hardware first would take too long, so I grouped the Vivado testbench waveform into the 4 pipeline stages—Index Gen, MACs, Dequantization, and Output Storage—and fixed each stage's fail signal in order. That's how I spotted the 1-cycle delay needed on conv_complete for the final BRAM write."
 
 Q4. Will your compression project hurt model accuracy?
-A4. "No—Run-Length or Bitmask compression on already-quantized 8-bit zeros is completely lossless, and skipping zero multiplications doesn't change the MAC sum, so accuracy stays identical."
+A4. "No—because I'm applying lossless Run-Length or Bitmask compression on already-quantized 8-bit zeros, and skipping a multiplication by zero doesn't change the MAC accumulator sum, the accuracy stays 100% identical."
