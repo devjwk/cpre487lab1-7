@@ -1,0 +1,127 @@
+================================================================================
+CPRE 487/587 - Labs 6 & 7 Demo Presentation Script (Team 06 - Jongwoo Kim)
+Target Speaking Time: ~3 min 45 sec - 4 min 00 sec (about 55-60 sec per slide)
+================================================================================
+
+
+--------------------------------------------------------------------------------
+[SLIDE 1] Team 06 – Jongwoo Kim – Lab 6
+--------------------------------------------------------------------------------
+
+[English Script]
+Hi everyone, I'm Jongwoo from Team 6.
+Throughout Labs 6 and 7, the main theme I found is how much memory access and data movement drive performance.
+
+Starting with Lab 6 on the x86 lab machine: by moving the output channel (m) to the innermost loop, my weight access changed from jumping by 32 in memory every step to reading one by one in order, as shown in the top-left plot.
+Just fixing that cache access pattern dropped my latency from 144.7 milliseconds down to 27 milliseconds—a 5.4x speedup without changing the math at all.
+
+For tiling, small tiles like size 2 and 4 actually slowed down due to loop overhead, while Tile 32 matched the channel size and performed best at 27.4 milliseconds.
+
+Finally, for multithreading, I split work across output rows using std::thread. Unlike some teams on Tuesday that saw speedups at 64 threads, my latency peaked at 4 threads with 8.21 milliseconds—a 17.6x speedup—and then slowed down from 8 to 64 threads as thread spawn and join overhead outweighed the compute gains.
+
+(Transition to Slide 2)
+Moving from CPU cache optimization to hardware acceleration brings me to Lab 7.
+
+[한국어 번역]
+안녕하세요, Team 6 김종우입니다.
+Lab 6와 7을 진행하면서 제가 발견한 핵심 주제는 메모리 접근과 데이터 이동이 성능을 얼마나 크게 좌우하는가입니다.
+먼저 랩실 x86 PC에서 측정한 Lab 6부터 말씀드리면, 출력 채널(m)을 가장 안쪽 루프로 옮겨서 왼쪽 위 그래프처럼 가중치 메모리를 32칸씩 점프하던 것에서 순서대로 하나씩 읽도록 바꿨습니다.
+계산식은 하나도 바꾸지 않고 이 캐시 접근 패턴만 고쳤는데도 지연 시간이 144.7ms에서 27ms로 줄어들어 5.4배 빨라졌습니다.
+타일링에서는 2나 4 같은 작은 타일은 루프 오버헤드 때문에 오히려 느려졌고, 채널 크기와 맞아떨어지는 Tile 32에서 27.4ms로 가장 좋았습니다.
+마지막으로 멀티스레딩은 std::thread로 출력 행(Row)을 나누었는데, 화요일에 64스레드에서 빨라졌던 일부 팀들과 달리 제 실험에서는 4스레드에서 8.21ms(17.6배 가속)로 최고점을 찍고, 8~64스레드에서는 스레드 생성·병합 오버헤드가 더 커지면서 다시 느려졌습니다.
+(연결) 이렇게 CPU 캐시를 최적화한 데서 나아가 하드웨어 가속기를 구현한 것이 다음 슬라이드의 Lab 7입니다.
+
+
+--------------------------------------------------------------------------------
+[SLIDE 2] Team 06 – Jongwoo Kim – Lab 7
+--------------------------------------------------------------------------------
+
+[English Script]
+To pick the right MAC unit for Lab 7, I first looked back at my Lab 5 results. The 8-bit Piped MAC ran at 131 megahertz and delivered 1 MAC per cycle at almost the exact same LUT and flip-flop cost as the Staged MAC.
+
+So I used four parallel 8-bit Piped MACs in the Lab 7 template and implemented all four hardware modules: the Index Generator using adder offsets, the four Piped MACs with bias preload, the Dequantization unit, and the Output Storage with 2-by-2 MaxPooling.
+
+As shown in the top-right waveform, I verified the design stage by stage in the Vivado testbench, and all four modules pass 100% with every fail signal at zero.
+On the bottom right, full-system synthesis completed with 9% LUTs, 4% flip-flops, 2% DSPs, and 49% BRAM.
+
+Right now, I am finishing the C++ CDMA integration using MLP.h to benchmark on the ZedBoard—and thanks to Tuesday's tip, I'll make sure use_lfn is enabled in Vitis.
+
+(Transition to Slide 3)
+Building and verifying these modules led directly to my main challenges and takeaways on the next slide.
+
+[한국어 번역]
+Lab 7에 쓸 MAC 유닛을 고르기 위해 먼저 제 Lab 5 결과를 돌아봤습니다. 8비트 Piped MAC이 Staged MAC과 거의 똑같은 LUT/FF 리소스를 쓰면서도 131MHz 속도와 클럭당 1 MAC의 처리량을 냈습니다.
+그래서 Lab 7 템플릿에 4개의 병렬 8비트 Piped MAC을 적용해 4개 하드웨어 모듈(오프셋 덧셈 기반 인덱스 생성기, 바이어스 프리로드가 들어간 4개 Piped MAC, 역양자화 유닛, 2x2 맥스풀링 출력 저장 모듈)을 모두 구현했습니다.
+오른쪽 위 파형에서 보시듯 Vivado 테스트벤치에서 단계별로 검증해 4개 모듈 모두 모든 fail 신호 0으로 100% 통과했습니다.
+오른쪽 아래처럼 전체 시스템 합성도 완료되어 LUT 9%, FF 4%, DSP 2%, 그리고 BRAM 49%가 나왔습니다.
+현재 ZedBoard 실측을 위해 MLP.h 기반 C++ CDMA 연동을 마무리 중이며, 화요일 발표 팀의 팁 덕분에 Vitis에서 use_lfn 옵션도 챙길 예정입니다.
+(연결) 이 모듈들을 직접 만들고 검증하는 과정이 다음 슬라이드의 어려웠던 점과 핵심 교훈으로 곧바로 이어집니다.
+
+
+--------------------------------------------------------------------------------
+[SLIDE 3] Team 06 – Challenges & Takeaways
+--------------------------------------------------------------------------------
+
+[English Script]
+On the challenge side: just as Lab 6 showed how loop and thread overhead can hurt CPU speed, Lab 7 showed how sensitive hardware is to addressing and memory timing.
+
+The two hardest parts in Lab 7 were calculating the 5-loop signed address jumps in index_gen without multipliers, and timing the BRAM Read-Modify-Write cycle for MaxPooling in output_storage.
+In fact, delaying conv_complete by just one clock cycle was critical so the final pooled byte finished writing to BRAM before the accelerator went idle.
+
+Stepping back across Labs 5, 6, and 7, my biggest takeaway is that data movement dominates compute performance—whether it was per-packet FIFO overhead in Lab 5, unit-stride cache locality giving a 5.4x speedup in Lab 6, or double-buffered on-chip BRAM avoiding DDR copies in Lab 7.
+
+(Transition to Slide 4)
+And seeing how critical on-chip BRAM is directly shaped my updated term project on the final slide.
+
+[한국어 번역]
+어려웠던 점을 보면, Lab 6에서 루프와 스레드 오버헤드가 CPU 속도를 깎아먹는 걸 봤던 것처럼 Lab 7에서는 하드웨어가 주소 계산과 메모리 타이밍에 얼마나 민감한지 체감했습니다.
+Lab 7에서 가장 힘들었던 두 가지는 index_gen에서 곱셈기 없이 5중 루프의 주소 점프값을 맞추는 것과, output_storage에서 맥스풀링을 위한 BRAM 읽기-수정-쓰기 타이밍을 맞추는 것이었습니다.
+실제로 마지막 풀링된 바이트가 BRAM에 완전히 쓰여진 뒤에 가속기가 멈추도록 conv_complete 신호를 딱 1클럭 지연시킨 것이 결정적이었습니다.
+Lab 5, 6, 7 전체를 돌아보며 얻은 저의 가장 큰 교훈은 결국 '데이터 이동이 연산 자체보다 성능을 지배한다'는 점입니다—Lab 5의 패킷당 FIFO 병목, Lab 6에서 캐시 지역성만으로 얻은 5.4배 가속, 그리고 Lab 7에서 온칩 BRAM 더블 버퍼링으로 DDR 복사를 없앤 것이 모두 한 맥락입니다.
+(연결) 그리고 이 온칩 BRAM이 얼마나 결정적인 자원인지 확인한 것이 마지막 슬라이드의 텀 프로젝트 주제로 자연스럽게 이어졌습니다.
+
+
+--------------------------------------------------------------------------------
+[SLIDE 4] Team 06 – Project Idea
+--------------------------------------------------------------------------------
+
+[English Script]
+Originally, my project proposal was to add DMA transfers to the accelerator, because in Lab 5 my bottleneck was the AXI-FIFO transfer.
+
+However, as the instructor feedback pointed out, Lab 7 already includes AXI CDMA—and as I showed on Slide 2, my synthesis results confirm that on-chip BRAM is now the primary bottleneck at 49%, while LUTs and DSPs are under 10%.
+
+So I pivoted my project to Weight and Activation Compression with Sparse Zero-Skipping to attack that BRAM and data-movement bottleneck directly.
+Because ReLU turns all negative activations into zeros, I will compress zero-heavy activations and weights using lossless Run-Length or Bitmask encoding before sending them over DMA.
+
+In hardware, I'll add a lightweight decoder between the BRAM and the MACs, and update the index generator and MAC enable logic to skip zero-value cycles on Conv2—allowing me to save both on-chip BRAM and inference latency without losing accuracy.
+
+Thank you, and I'm happy to take any questions!
+
+[한국어 번역]
+원래 제 프로젝트 제안서는 Lab 5의 병목이었던 FIFO 통신을 개선하기 위해 가속기에 DMA를 추가하는 것이었습니다.
+하지만 교수님 피드백에서 짚어주셨듯 Lab 7에 이미 AXI CDMA가 들어 있고, 앞서 Slide 2 합성 결과에서 보여드렸듯이 LUT와 DSP는 10% 미만인데 온칩 BRAM만 49%를 차지해 이제는 BRAM이 가장 큰 병목이 되었습니다.
+그래서 이 BRAM 용량과 데이터 이동 병목을 정면으로 해결하기 위해 주제를 '가중치·활성화 압축 및 희소 제로 스키핑'으로 발전시켰습니다.
+ReLU를 거치면 음수가 모두 0이 되어 0이 아주 많아지므로, DMA로 보내기 전에 무손실 Run-Length나 비트마스크 방식으로 데이터를 압축해 전송할 것입니다.
+하드웨어에서는 BRAM과 MAC 사이에 가벼운 디코더를 추가하고, 인덱스 생성기와 MAC 제어 로직이 값이 0인 연산 클럭을 건너뛰게(Zero-skipping) 만들어 정확도 손실 없이 Conv2의 BRAM 사용량과 추론 시간을 동시에 줄이고자 합니다.
+감사합니다, 질문 받겠습니다!
+
+
+================================================================================
+[Q&A CHEAT SHEET - 화요일 수업 실제 질문 4가지 & 10초 답변]
+================================================================================
+
+Q1. How did you split threads in Lab 6, and what SIMD flags did you use?
+A1. "I split threads across the output rows (p dimension) using std::thread so threads never write to the same memory. For SIMD, I used -O3 auto-vectorization over the sequential output-channel (m) innermost loop."
+(출력 행 p를 기준으로 스레드를 나눠 메모리 충돌을 없앴고, SIMD는 연속된 m 안쪽 루프에 -O3 자동 벡터화를 적용했습니다.)
+
+Q2. How many images did you test for the Lab 6 latency benchmarks?
+A2. "I measured single-image full-CNN inference latency on image_0 across all layers so I could directly compare per-image runtime across all tile sizes and thread counts."
+(단일 이미지 전체 레이어 추론 시간을 기준으로 각 타일 크기와 스레드 개수별 지연 시간을 비교 측정했습니다.)
+
+Q3. What was your debugging strategy for Lab 7?
+A3. "I debugged incrementally in the Vivado testbench by grouping the waveform into the 4 pipeline stages—Index Gen, MACs, Dequantization, and Output Storage—and fixing each stage's fail signal in order. That's how I caught the 1-cycle delay needed on conv_complete for the final BRAM write."
+(Vivado 테스트벤치에서 4개 스테이지 순서대로 fail 신호를 하나씩 잡는 단계별 디버깅을 했고, 덕분에 마지막 BRAM 쓰기를 위한 conv_complete 1클럭 지연 문제를 바로 잡았습니다.)
+
+Q4. Will your compression project hurt model accuracy?
+A4. "No—Run-Length or Bitmask compression on already-quantized 8-bit zeros is completely lossless, and skipping zero multiplications doesn't change the MAC sum, so accuracy stays identical."
+(이미 8비트로 양자화된 데이터에서 0을 압축하고 0 곱셈만 건너뛰는 것은 무손실(lossless)이라 정확도는 100% 동일하게 유지됩니다.)
